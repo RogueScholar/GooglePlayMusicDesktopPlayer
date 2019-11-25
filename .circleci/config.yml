@@ -1,44 +1,5 @@
 version: 2
 jobs:
-  darwin:
-    macos:
-      xcode: "9.0"
-    steps:
-      - checkout
-      - run:
-          name: Replace NPM Version
-          command: npm install -g npm@3
-      - run:
-          name: Install Dependencies
-          command: yarn
-      - run:
-          name: Run Linting
-          command: yarn test
-      #- run:
-      #    name: Run Tests
-      #    command: yarn test-electron-coverage
-      #- run:
-      #    name: Publish Coverage
-      #    command: yarn _coverage_publish
-      - run:
-          name: Import Keys
-          command: ./sig/import.sh
-      - run:
-          name: Make Artifacts
-          command: yarn make:darwin
-      - run:
-          name: Move Artifacts
-          command: |
-            mkdir -p dist/installers/darwin
-            mv "dist/Google Play Music Desktop Player-darwin-x64/Google Play Music Desktop Player.zip" "dist/installers/darwin/Google Play Music Desktop Player.zip"
-      - save_cache:
-          key: darwin-artifact-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - "dist/installers"
-      - store_artifacts:
-          path: dist/installers
-      - store_test_results:
-          path: test_reports
   linux_test:
     docker:
       - image: gpmdp/build-64
@@ -129,11 +90,6 @@ jobs:
           command: |
             sudo mkdir -p /Users/distiller/project
             sudo chmod -R 777 /Users/distiller/project
-      - restore_cache:
-          key: darwin-artifact-{{ .Branch }}-{{ .Revision }}
-      - run:
-          name: Move
-          command: mv /Users/distiller/project/dist/installers/darwin dist/installers/darwin
       - store_artifacts:
           path: dist
 
@@ -143,7 +99,6 @@ workflows:
   version: 2
   build:
     jobs:
-      - darwin
       - linux_test
       - linux_pack_64:
           requires:
@@ -158,4 +113,3 @@ workflows:
           requires:
             - linux_deb_64
             - linux_rpm_64
-            - darwin
