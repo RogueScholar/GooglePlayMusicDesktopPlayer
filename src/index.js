@@ -1,22 +1,19 @@
-import { app, BrowserWindow } from 'electron';
+import {app, BrowserWindow} from 'electron';
 import path from 'path';
 import ua from 'universal-analytics';
 import uuid from 'uuid';
 import winston from 'winston';
 
+import {positionOnScreen} from './_util';
 import configureApp from './main/configureApp';
 import generateBrowserConfig from './main/configureBrowser';
-import { positionOnScreen } from './_util';
-
+import {updateShortcuts} from './main/utils/_shortcutManager';
 import EmitterClass from './main/utils/Emitter';
+import I3IpcHelperClass from './main/utils/I3IpcHelper';
+import PlaybackAPIClass from './main/utils/PlaybackAPI';
 import SettingsClass from './main/utils/Settings';
 import WindowManagerClass from './main/utils/WindowManager';
-import PlaybackAPIClass from './main/utils/PlaybackAPI';
-import I3IpcHelperClass from './main/utils/I3IpcHelper';
-
 import handleStartupEvent from './squirrel';
-
-import { updateShortcuts } from './main/utils/_shortcutManager';
 
 app.setAppUserModelId('com.marshallofsound.gpmdp.core');
 
@@ -33,11 +30,13 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
   const gotLock = app.requestSingleInstanceLock();
   app.on('second-instance', () => {
     if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
+      if (mainWindow.isMinimized())
+        mainWindow.restore();
       mainWindow.focus();
       mainWindow.show();
       mainWindow.setSkipTaskbar(false);
-      if (app.dock && app.dock.show) app.dock.show();
+      if (app.dock && app.dock.show)
+        app.dock.show();
     }
   });
 
@@ -52,7 +51,10 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
     global.Settings = new SettingsClass();
   }
 
-  global.DEV_MODE = process.env['TEST_SPEC'] || process.argv.some(arg => arg === '--development') || process.argv.some(arg => arg === '--dev'); // eslint-disable-line
+  global.DEV_MODE =
+      process.env['TEST_SPEC'] ||
+      process.argv.some(arg => arg === '--development') ||
+      process.argv.some(arg => arg === '--dev'); // eslint-disable-line
 
   updateShortcuts();
 
@@ -60,15 +62,15 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
   const defaultFileLogLevel = 'info';
   const defaultConsoleLogLevel = global.DEV_MODE ? 'debug' : 'error';
   global.Logger = new (winston.Logger)({
-    transports: [
+    transports : [
       new (winston.transports.File)({
-        filename: path.resolve(app.getPath('userData'), 'gpmdp.log'),
-        level: defaultFileLogLevel,
-        maxsize: 5000000,
-        maxfiles: 2,
+        filename : path.resolve(app.getPath('userData'), 'gpmdp.log'),
+        level : defaultFileLogLevel,
+        maxsize : 5000000,
+        maxfiles : 2,
       }),
       new (winston.transports.Console)({
-        level: defaultConsoleLogLevel,
+        level : defaultConsoleLogLevel,
       }),
     ],
   });
@@ -88,8 +90,10 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
   user.pageview(`/${app.getVersion()}`).send();
 
   // Replace the logger's levels with those from settings.
-  Logger.transports.console.level = Settings.get('consoleLogLevel', defaultConsoleLogLevel);
-  Logger.transports.file.level = Settings.get('fileLogLevel', defaultFileLogLevel);
+  Logger.transports.console.level =
+      Settings.get('consoleLogLevel', defaultConsoleLogLevel);
+  Logger.transports.file.level =
+      Settings.get('fileLogLevel', defaultFileLogLevel);
 
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {
@@ -104,8 +108,9 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
   // initialization and is ready to create browser windows.
   app.on('ready', () => {
     mainWindow = new BrowserWindow(generateBrowserConfig());
-      // Use the default user agent but remove Electron
-    let newUserAgent = mainWindow.webContents.getUserAgent().replace(/Electron\/.+? /g, '');
+    // Use the default user agent but remove Electron
+    let newUserAgent =
+        mainWindow.webContents.getUserAgent().replace(/Electron\/.+? /g, '');
 
     // Spoof the user agent to bypass the sign in issue (#3545)
     if (Settings.get('userAgent')) {
@@ -119,7 +124,7 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
     const inBounds = positionOnScreen(position);
 
     let size = Settings.get('size');
-    size = size || [1200, 800];
+    size = size || [ 1200, 800 ];
 
     mainWindow.setSize(...size);
     if (position && inBounds) {
@@ -141,7 +146,8 @@ app.setAppUserModelId('com.marshallofsound.gpmdp.core');
 
     // Proxy window events through IPC to solve 'webContents destroyed' errors
     const proxyWindowEvent = (name) => {
-      mainWindow.on(name, (...args) => Emitter.sendToGooglePlayMusic(`BrowserWindow:${name}`, ...args));
+      mainWindow.on(name, (...args) => Emitter.sendToGooglePlayMusic(
+                              `BrowserWindow:${name}`, ...args));
     };
     proxyWindowEvent('app-command');
     proxyWindowEvent('swipe');
