@@ -40,7 +40,6 @@ slots:
     interface: mpris
     name: google_play_music_desktop_player
 
-
 parts:
   google-play-music-desktop-player:
     plugin: nodejs
@@ -71,13 +70,13 @@ parts:
       - libappindicator3-1
       - unity-gtk3-module
     override-build: |
-        export PATH=$PATH:$SNAPCRAFT_PART_BUILD/../npm/bin
-        export PATH=$PATH:$SNAPCRAFT_PART_BUILD/node_modules/.bin
-        snapcraftctl set-version $(git describe --tags)
-        npm install
-        npm run build
-        npm run make:deb:64
-        cp ${SNAPCRAFT_PART_BUILD}/dist/installers/debian/*.deb ${SNAPCRAFT_STAGE}/dist.deb
+      export PATH=$PATH:$SNAPCRAFT_PART_BUILD/../npm/bin
+      export PATH=$PATH:$SNAPCRAFT_PART_BUILD/node_modules/.bin
+      snapcraftctl set-version $(git describe --tags)
+      npm install
+      npm run build
+      npm run make:deb:64
+      cp ${SNAPCRAFT_PART_BUILD}/dist/installers/debian/*.deb ${SNAPCRAFT_STAGE}/dist.deb
 
   dump-package:
     plugin: dump
